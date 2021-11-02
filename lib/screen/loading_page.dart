@@ -15,6 +15,7 @@ class _LoadingPageState extends State<LoadingPage>
   DatabaseHelper? _databaseHelper;
   List<User>? allUsers;
   TabController? _tabController;
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   var level;
   final TextEditingController _nameController = TextEditingController();
   String? picturePath;
@@ -215,29 +216,9 @@ class _LoadingPageState extends State<LoadingPage>
       child: Container(
         alignment: Alignment.center,
         height: 385.0,
-        child: _refreshIndicator(),
+        child: _listViewBuilder(),
       ),
     );
-  }
-
-  Widget _refreshIndicator() {
-    return RefreshIndicator(
-        onRefresh: () async {
-          allUsers = [];
-          _databaseHelper = DatabaseHelper();
-          _databaseHelper!.getAllUsers().then((allUsersFromDb) {
-            for (var item in allUsersFromDb) {
-              allUsers!.add(User.fromMapFromDb(item));
-            }
-            debugPrint(allUsers!.length.toString());
-          }).catchError((err) {
-            debugPrint(err.toString());
-          });
-          Future.delayed(const Duration(seconds: 2), () {
-            setState(() {});
-          });
-        },
-        child: SingleChildScrollView(child: _listViewBuilder()));
   }
 
   Widget _listViewBuilder() {
@@ -300,343 +281,321 @@ class _LoadingPageState extends State<LoadingPage>
     return SingleChildScrollView(
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30.0),
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
           color: Colors.blue[700],
         ),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              SizedBox(height: 10.0),
-              Container(
-                width: 50.0,
-                height: 8.0,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(
-                    20.0,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                SizedBox(height: 10.0),
+                Container(
+                  width: 50.0,
+                  height: 8.0,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(
+                      20.0,
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: TextField(
-                  controller: _nameController,
-                  cursorColor: Colors.white54,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: "What do you need to do?",
-                    hintStyle: TextStyle(color: Colors.white54, fontSize: 25.0),
-                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: _textFieldSection(),
                 ),
-              ),
-              Wrap(
-                spacing: 20,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        elevation: 0, primary: Colors.green.shade100),
-                    onPressed: () {},
-                    child: const Text(
-                      "Meeting",
-                      style: TextStyle(fontSize: 18, color: Colors.black),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        elevation: 0, primary: Colors.yellow.shade100),
-                    onPressed: () {},
-                    child: const Text(
-                      "review",
-                      style: TextStyle(fontSize: 18, color: Colors.black),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        elevation: 0, primary: Colors.pink.shade100),
-                    onPressed: () {},
-                    child: const Text(
-                      "Marketing",
-                      style: TextStyle(fontSize: 18, color: Colors.black),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        elevation: 0, primary: Colors.orange.shade100),
-                    onPressed: () {},
-                    child: const Text(
-                      "Design Project",
-                      style: TextStyle(fontSize: 18, color: Colors.black),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                        minimumSize: const Size(50, 40),
-                        primary: Colors.white38),
-                    child: const Icon(
-                      Icons.add,
-                      size: 20,
-                    ),
-                    onPressed: () {},
-                  )
-                ],
-              ),
-              Divider(color: Colors.grey, thickness: 1),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  spacing: 20,
                   children: [
-                    Text(
-                      "Priority",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 18.0),
-                    ),
-                    Container()
+                    _elevatedButton(Colors.green.shade100, "Meeting"),
+                    _elevatedButton(Colors.yellow.shade100, "review"),
+                    _elevatedButton(Colors.pink.shade100, "Marketing"),
+                    _elevatedButton(Colors.orange.shade100, "Design Project"),
+                    _elevatedButton(Colors.blue.shade200, "+")
                   ],
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Expanded(
+                Divider(color: Colors.white, thickness: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          StatefulBuilder(
-                            builder:
-                                (BuildContext context, StateSetter setState) =>
-                                    Radio(
-                              activeColor: Colors.white,
-                              fillColor:
-                                  MaterialStateProperty.all(Colors.white),
-                              value: 'high',
-                              groupValue: level,
-                              onChanged: (value) {
-                                setState(() {
-                                  level = value.toString();
-                                });
-                              },
-                            ),
-                          ),
-                          Text('High !!!',
-                              style: TextStyle(color: Colors.white)),
-                        ],
+                      Text(
+                        "Priority",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 18.0),
                       ),
-                      Row(
-                        children: [
-                          StatefulBuilder(
-                            builder:
-                                (BuildContext context, StateSetter setState) =>
-                                    Radio(
-                              activeColor: Colors.white,
-                              fillColor:
-                                  MaterialStateProperty.all(Colors.white),
-                              value: 'Medium',
-                              groupValue: level,
-                              onChanged: (value) {
-                                setState(() {
-                                  level = value.toString();
-                                });
-                              },
-                            ),
-                          ),
-                          Text('Medium !!',
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          StatefulBuilder(
-                            builder:
-                                (BuildContext context, StateSetter setState) =>
-                                    Radio(
-                              activeColor: Colors.white,
-                              fillColor:
-                                  MaterialStateProperty.all(Colors.white),
-                              value: 'Low',
-                              groupValue: level,
-                              onChanged: (value) {
-                                setState(() {
-                                  level = value.toString();
-                                });
-                              },
-                            ),
-                          ),
-                          Text('Low !', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          StatefulBuilder(
-                            builder:
-                                (BuildContext context, StateSetter setState) =>
-                                    Radio(
-                              activeColor: Colors.white,
-                              fillColor:
-                                  MaterialStateProperty.all(Colors.white),
-                              value: 'None',
-                              groupValue: level,
-                              onChanged: (value) {
-                                setState(() {
-                                  level = value.toString();
-                                });
-                              },
-                            ),
-                          ),
-                          Text(
-                            'None',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      )
+                      Container()
                     ],
                   ),
                 ),
-              ),
-              Divider(color: Colors.grey, thickness: 1),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Invite",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 18.0),
-                    ),
-                    Container()
-                  ],
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Expanded(
+                    child: _radioButtonSection(),
+                  ),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        picturePath = "assets/images/avatar_image_1.png";
-                      });
-                    },
-                    child: Container(
-                      width: 50.0,
-                      height: 50.0,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage(
-                              "assets/images/avatar_image_1.png",
-                            ),
-                            fit: BoxFit.cover),
-                        color: Colors.indigo,
-                        borderRadius: BorderRadius.circular(10.0),
+                Divider(color: Colors.white, thickness: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Invite",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 18.0),
                       ),
-                    ),
+                      Container()
+                    ],
                   ),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        picturePath = "assets/images/avatar_image_2.png";
-                      });
-                    },
-                    child: Container(
-                      width: 50.0,
-                      height: 50.0,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage(
-                              "assets/images/avatar_image_2.png",
-                            ),
-                            fit: BoxFit.cover),
-                        color: Colors.indigo,
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      picturePath = "assets/images/avatar_image_3.png";
-                    },
-                    child: Container(
-                      width: 50.0,
-                      height: 50.0,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage(
-                              "assets/images/avatar_image_3.png",
-                            ),
-                            fit: BoxFit.cover),
-                        color: Colors.indigo,
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        picturePath = "assets/images/avatar_image_4.png";
-                      });
-                    },
-                    child: Container(
-                      width: 50.0,
-                      height: 50.0,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage(
-                              "assets/images/avatar_image_4.png",
-                            ),
-                            fit: BoxFit.cover),
-                        color: Colors.indigo,
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 50.0,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.transparent, elevation: 0),
-                      child: const Text(
-                        'Close',
-                        style: TextStyle(color: Colors.white, fontSize: 18.0),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    SizedBox(width: 20.0),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(primary: Colors.white),
-                      child: const Text(
-                        'Save',
-                        style: TextStyle(color: Colors.black, fontSize: 18.0),
-                      ),
-                      onPressed: () {
-                        _addUser(
-                          User(_nameController.text, level, picturePath),
-                        );
-                        _nameController.clear();
-                        level = "";
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
                 ),
-              ),
-            ],
+                _imageSection(),
+                SizedBox(
+                  height: 50.0,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.transparent, elevation: 0),
+                        child: const Text(
+                          'Close',
+                          style: TextStyle(color: Colors.white, fontSize: 18.0),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      SizedBox(width: 20.0),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(primary: Colors.white),
+                        child: const Text(
+                          'Save',
+                          style: TextStyle(color: Colors.black, fontSize: 18.0),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _addUser(
+                              User(_nameController.text, level, picturePath),
+                            );
+                            _nameController.clear();
+                            level = "";
+                            Navigator.pop(context);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _elevatedButton(Color c, String s) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(elevation: 0, primary: c),
+      onPressed: () {},
+      child: Text(
+        "$s",
+        style: TextStyle(fontSize: 18, color: Colors.black),
+      ),
+    );
+  }
+
+  Widget _textFieldSection() {
+    return TextFormField(
+      controller: _nameController,
+      cursorColor: Colors.white54,
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        hintText: "What do you need to do?",
+        hintStyle: TextStyle(color: Colors.white54, fontSize: 25.0),
+      ),
+      validator: (v) {
+        if (v!.isEmpty) {
+          return 'So\'z kiriting';
+        }
+      },
+    );
+  }
+
+  Widget _radioButtonSection() {
+    return Row(
+      children: [
+        Row(
+          children: [
+            StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) => Radio(
+                activeColor: Colors.white,
+                fillColor: MaterialStateProperty.all(Colors.white),
+                value: 'high',
+                groupValue: level,
+                onChanged: (value) {
+                  setState(() {
+                    level = value.toString();
+                  });
+                },
+              ),
+            ),
+            Text('High !!!', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        Row(
+          children: [
+            StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) => Radio(
+                activeColor: Colors.white,
+                fillColor: MaterialStateProperty.all(Colors.white),
+                value: 'Medium',
+                groupValue: level,
+                onChanged: (value) {
+                  setState(() {
+                    level = value.toString();
+                  });
+                },
+              ),
+            ),
+            Text('Medium !!', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        Row(
+          children: [
+            StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) => Radio(
+                activeColor: Colors.white,
+                fillColor: MaterialStateProperty.all(Colors.white),
+                value: 'Low',
+                groupValue: level,
+                onChanged: (value) {
+                  setState(() {
+                    level = value.toString();
+                  });
+                },
+              ),
+            ),
+            Text('Low !', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        Row(
+          children: [
+            StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) => Radio(
+                activeColor: Colors.white,
+                fillColor: MaterialStateProperty.all(Colors.white),
+                value: 'None',
+                groupValue: level,
+                onChanged: (value) {
+                  setState(() {
+                    level = value.toString();
+                  });
+                },
+              ),
+            ),
+            Text(
+              'None',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        )
+      ],
+    );
+  }
+
+  Widget _imageSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        InkWell(
+          onTap: () {
+            setState(() {
+              picturePath = "assets/images/avatar_image_1.png";
+            });
+          },
+          child: Container(
+            width: 50.0,
+            height: 50.0,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage(
+                    "assets/images/avatar_image_1.png",
+                  ),
+                  fit: BoxFit.cover),
+              color: Colors.indigo,
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: () {
+            setState(() {
+              picturePath = "assets/images/avatar_image_2.png";
+            });
+          },
+          child: Container(
+            width: 50.0,
+            height: 50.0,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage(
+                    "assets/images/avatar_image_2.png",
+                  ),
+                  fit: BoxFit.cover),
+              color: Colors.indigo,
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: () {
+            picturePath = "assets/images/avatar_image_3.png";
+          },
+          child: Container(
+            width: 50.0,
+            height: 50.0,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage(
+                    "assets/images/avatar_image_3.png",
+                  ),
+                  fit: BoxFit.cover),
+              color: Colors.indigo,
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: () {
+            setState(() {
+              picturePath = "assets/images/avatar_image_4.png";
+            });
+          },
+          child: Container(
+            width: 50.0,
+            height: 50.0,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage(
+                    "assets/images/avatar_image_4.png",
+                  ),
+                  fit: BoxFit.cover),
+              color: Colors.indigo,
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
